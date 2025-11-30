@@ -1,0 +1,22 @@
+{
+	"id": "1cc8fb74-b57c-4092-8cf2-4ad4047a0095",
+	"name": "LLM T",
+	"values": [
+		{
+			"key": "OPENROUTER_API_KEY",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "evaluation",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		}
+	],
+	"color": null,
+	"_postman_variable_scope": "environment",
+	"_postman_exported_at": "2025-11-30T12:26:34.456Z",
+	"_postman_exported_using": "Postman/11.73.5"
+}

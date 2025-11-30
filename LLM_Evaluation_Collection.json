@@ -1,0 +1,509 @@
+{
+	"info": {
+		"_postman_id": "34f86622-a3a6-4589-bef8-a8af1a09268a",
+		"name": "LLM_Automated Tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38663480",
+		"_collection_link": "https://kk2222-6826.postman.co/workspace/kk-Workspace~cb5acf23-764e-4c4a-89b6-984ba79e5185/collection/38663480-34f86622-a3a6-4589-bef8-a8af1a09268a?action=share&source=collection_link&creator=38663480"
+	},
+	"item": [
+		{
+			"name": "TEST1_City",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let result;\r",
+							"try { result = pm.response.json(); } catch (e) { result = {}; }\r",
+							"\r",
+							"let promptText = \"Which city is the capital of the country where the Eiffel Tower is located?\";\r",
+							"let answer = result?.choices?.[0]?.message?.content || \"No answer returned\";\r",
+							"\r",
+							"pm.sendRequest({\r",
+							"    url: \"https://openrouter.ai/api/v1/chat/completions\",\r",
+							"    method: \"POST\",\r",
+							"    header: {\r",
+							"        \"Content-Type\": \"application/json\",\r",
+							"        \"Authorization\": `Bearer ${pm.environment.get(\"OPENROUTER_API_KEY\")}`\r",
+							"    },\r",
+							"    body: {\r",
+							"        mode: \"raw\",\r",
+							"        raw: JSON.stringify({\r",
+							"            model: \"meta-llama/llama-3.3-70b-instruct\",\r",
+							"            messages: [\r",
+							"                { role: \"system\", content: \"You are an evaluator AI. Reply ONLY: CORRECT or WRONG.\" },\r",
+							"                { role: \"user\", content: `Prompt: ${promptText}\\nAnswer: ${answer}` }\r",
+							"            ]\r",
+							"        })\r",
+							"    }\r",
+							"}, (err, res) => {\r",
+							"\r",
+							"    let evalJson;\r",
+							"    try { evalJson = res.json(); } catch (e) { evalJson = {}; }\r",
+							"\r",
+							"    let evaluation = evalJson?.choices?.[0]?.message?.content?.trim() || \"WRONG\";\r",
+							"\r",
+							"    pm.test(\"Evaluation Result\", function () {\r",
+							"        pm.expect(evaluation).to.be.oneOf([\"CORRECT\", \"WRONG\"]);\r",
+							"    });\r",
+							"\r",
+							"    // ⭐ Save only CORRECT or WRONG\r",
+							"    pm.environment.set(\"evaluation\", evaluation);\r",
+							"\r",
+							"    pm.test(`Prompt: ${promptText}`, () => pm.expect(true).to.be.true);\r",
+							"    pm.test(`Answer: ${answer}`, () => pm.expect(true).to.be.true);\r",
+							"    pm.test(`Evaluation: ${evaluation}`, () => pm.expect(true).to.be.true);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"model\": \"llama-3.3-70b-versatile\",\r\n  \"messages\": [\r\n    {\r\n      \"role\": \"user\",\r\n      \"content\": \"Which city is the capital of the country where the Eiffel Tower is located?\"\r\n    }\r\n  ]\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.groq.com/openai/v1/chat/completions",
+					"protocol": "https",
+					"host": [
+						"api",
+						"groq",
+						"com"
+					],
+					"path": [
+						"openai",
+						"v1",
+						"chat",
+						"completions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TEST2_ِAnimal Story",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// ===============================\r",
+							"// 1) Extract Answer From LLM #1\r",
+							"// ===============================\r",
+							"let result;\r",
+							"try {\r",
+							"    result = pm.response.json();\r",
+							"} catch (e) {\r",
+							"    result = {};\r",
+							"}\r",
+							"\r",
+							"let promptText = \"Tell me a story of an animal that has ears in shape of a triangle and does meow.\";\r",
+							"let answer = \"\";\r",
+							"\r",
+							"// Safe extraction\r",
+							"if (result && result.choices && result.choices[0] && result.choices[0].message) {\r",
+							"    answer = result.choices[0].message.content;\r",
+							"} else {\r",
+							"    answer = \"No answer returned\";\r",
+							"}\r",
+							"\r",
+							"// ===============================\r",
+							"// 2) Send Request To Evaluator LLM\r",
+							"// ===============================\r",
+							"pm.sendRequest({\r",
+							"    url: \"https://openrouter.ai/api/v1/chat/completions\",\r",
+							"    method: \"POST\",\r",
+							"\r",
+							"    header: {\r",
+							"        \"Content-Type\": \"application/json\",\r",
+							"        \"Authorization\": `Bearer ${pm.environment.get(\"OPENROUTER_API_KEY\")}`\r",
+							"    },\r",
+							"\r",
+							"    body: {\r",
+							"        mode: \"raw\",\r",
+							"        raw: JSON.stringify({\r",
+							"            model: \"meta-llama/llama-3.3-70b-instruct\",\r",
+							"            messages: [\r",
+							"                {\r",
+							"                    role: \"system\",\r",
+							"                    content: \"You are an evaluator AI. Reply with ONLY: CORRECT or WRONG.\"\r",
+							"                },\r",
+							"                {\r",
+							"                    role: \"user\",\r",
+							"                    content: `Prompt: ${promptText}\\nAnswer: ${answer}`\r",
+							"                }\r",
+							"            ]\r",
+							"        })\r",
+							"    }\r",
+							"\r",
+							"}, (err, res) => {\r",
+							"\r",
+							"    // ===============================\r",
+							"    // 3) Parse Evaluator JSON Safely\r",
+							"    // ===============================\r",
+							"    let judgeJson;\r",
+							"    try {\r",
+							"        judgeJson = res.json();\r",
+							"    } catch (e) {\r",
+							"        judgeJson = {};\r",
+							"    }\r",
+							"\r",
+							"    let evaluation = \"WRONG\";\r",
+							"\r",
+							"    if (judgeJson.choices && judgeJson.choices[0] && judgeJson.choices[0].message) {\r",
+							"        evaluation = judgeJson.choices[0].message.content.trim();\r",
+							"    }\r",
+							"\r",
+							"    // ===============================\r",
+							"    // 4) Basic Test (PASS / FAIL)\r",
+							"    // ===============================\r",
+							"    pm.test(\"Evaluation Result\", function () {\r",
+							"        pm.expect(evaluation).to.be.oneOf([\"CORRECT\", \"WRONG\"]);\r",
+							"    });\r",
+							"\r",
+							"    // ===============================\r",
+							"    // 5) LLM Report (Appears in Runner)\r",
+							"    // ===============================\r",
+							"    pm.test(`Prompt: ${promptText}`, () => pm.expect(true).to.be.true);\r",
+							"    pm.test(`Answer: ${answer}`, () => pm.expect(true).to.be.true);\r",
+							"    pm.test(`Evaluation: ${evaluation}`, () => pm.expect(true).to.be.true);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"model\": \"llama-3.3-70b-versatile\",\r\n  \"messages\": [\r\n    {\r\n      \"role\": \"user\",\r\n      \"content\": \"Tell me a story of an animal that has ears in shape of a triangle and does meow.\"\r\n    }\r\n  ]\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.groq.com/openai/v1/chat/completions",
+					"protocol": "https",
+					"host": [
+						"api",
+						"groq",
+						"com"
+					],
+					"path": [
+						"openai",
+						"v1",
+						"chat",
+						"completions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TEST3_Weekdays",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// ===============================\r",
+							"// 1) Extract Answer From LLM #1\r",
+							"// ===============================\r",
+							"let result;\r",
+							"try {\r",
+							"    result = pm.response.json();\r",
+							"} catch (e) {\r",
+							"    result = {};\r",
+							"}\r",
+							"\r",
+							"let promptText = \"How many days are in a week?\";\r",
+							"let answer = \"\";\r",
+							"\r",
+							"// Safe extraction\r",
+							"if (result && result.choices && result.choices[0] && result.choices[0].message) {\r",
+							"    answer = result.choices[0].message.content;\r",
+							"} else {\r",
+							"    answer = \"No answer returned\";\r",
+							"}\r",
+							"\r",
+							"// ===============================\r",
+							"// 2) Send Request To Evaluator LLM\r",
+							"// ===============================\r",
+							"pm.sendRequest({\r",
+							"    url: \"https://openrouter.ai/api/v1/chat/completions\",\r",
+							"    method: \"POST\",\r",
+							"\r",
+							"    header: {\r",
+							"        \"Content-Type\": \"application/json\",\r",
+							"        \"Authorization\": `Bearer ${pm.environment.get(\"OPENROUTER_API_KEY\")}`\r",
+							"    },\r",
+							"\r",
+							"    body: {\r",
+							"        mode: \"raw\",\r",
+							"        raw: JSON.stringify({\r",
+							"            model: \"meta-llama/llama-3.3-70b-instruct\",\r",
+							"            messages: [\r",
+							"                {\r",
+							"                    role: \"system\",\r",
+							"                    content: \"You are an evaluator AI. Reply with ONLY: CORRECT or WRONG.\"\r",
+							"                },\r",
+							"                {\r",
+							"                    role: \"user\",\r",
+							"                    content: `Prompt: ${promptText}\\nAnswer: ${answer}`\r",
+							"                }\r",
+							"            ]\r",
+							"        })\r",
+							"    }\r",
+							"\r",
+							"}, (err, res) => {\r",
+							"\r",
+							"    // ===============================\r",
+							"    // 3) Parse Evaluator JSON Safely\r",
+							"    // ===============================\r",
+							"    let judgeJson;\r",
+							"    try {\r",
+							"        judgeJson = res.json();\r",
+							"    } catch (e) {\r",
+							"        judgeJson = {};\r",
+							"    }\r",
+							"\r",
+							"    let evaluation = \"WRONG\";\r",
+							"\r",
+							"    if (judgeJson.choices && judgeJson.choices[0] && judgeJson.choices[0].message) {\r",
+							"        evaluation = judgeJson.choices[0].message.content.trim();\r",
+							"    }\r",
+							"\r",
+							"    // ===============================\r",
+							"    // 4) Basic Test (PASS / FAIL)\r",
+							"    // ===============================\r",
+							"    pm.test(\"Evaluation Result\", function () {\r",
+							"        pm.expect(evaluation).to.be.oneOf([\"CORRECT\", \"WRONG\"]);\r",
+							"    });\r",
+							"\r",
+							"    // ===============================\r",
+							"    // 5) LLM Report (Appears in Runner)\r",
+							"    // ===============================\r",
+							"    pm.test(`Prompt: ${promptText}`, () => pm.expect(true).to.be.true);\r",
+							"    pm.test(`Answer: ${answer}`, () => pm.expect(true).to.be.true);\r",
+							"    pm.test(`Evaluation: ${evaluation}`, () => pm.expect(true).to.be.true);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"model\": \"llama-3.3-70b-versatile\",\r\n  \"messages\": [\r\n    {\r\n      \"role\": \"user\",\r\n      \"content\": \"How many days are in a week?\"\r\n    }\r\n  ]\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.groq.com/openai/v1/chat/completions",
+					"protocol": "https",
+					"host": [
+						"api",
+						"groq",
+						"com"
+					],
+					"path": [
+						"openai",
+						"v1",
+						"chat",
+						"completions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TEST4_Photosynthesis",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// ===============================\r",
+							"// 1) Extract Answer From LLM #1\r",
+							"// ===============================\r",
+							"let result;\r",
+							"try {\r",
+							"    result = pm.response.json();\r",
+							"} catch (e) {\r",
+							"    result = {};\r",
+							"}\r",
+							"\r",
+							"let promptText = \"What gas do plants release during photosynthesis?\";\r",
+							"let answer = \"\";\r",
+							"\r",
+							"// Safe extraction\r",
+							"if (result && result.choices && result.choices[0] && result.choices[0].message) {\r",
+							"    answer = result.choices[0].message.content;\r",
+							"} else {\r",
+							"    answer = \"No answer returned\";\r",
+							"}\r",
+							"\r",
+							"// ===============================\r",
+							"// 2) Send Request To Evaluator LLM\r",
+							"// ===============================\r",
+							"pm.sendRequest({\r",
+							"    url: \"https://openrouter.ai/api/v1/chat/completions\",\r",
+							"    method: \"POST\",\r",
+							"\r",
+							"    header: {\r",
+							"        \"Content-Type\": \"application/json\",\r",
+							"        \"Authorization\": `Bearer ${pm.environment.get(\"OPENROUTER_API_KEY\")}`\r",
+							"    },\r",
+							"\r",
+							"    body: {\r",
+							"        mode: \"raw\",\r",
+							"        raw: JSON.stringify({\r",
+							"            model: \"meta-llama/llama-3.3-70b-instruct\",\r",
+							"            messages: [\r",
+							"                {\r",
+							"                    role: \"system\",\r",
+							"                    content: \"You are an evaluator AI. Reply with ONLY: CORRECT or WRONG.\"\r",
+							"                },\r",
+							"                {\r",
+							"                    role: \"user\",\r",
+							"                    content: `Prompt: ${promptText}\\nAnswer: ${answer}`\r",
+							"                }\r",
+							"            ]\r",
+							"        })\r",
+							"    }\r",
+							"\r",
+							"}, (err, res) => {\r",
+							"\r",
+							"    // ===============================\r",
+							"    // 3) Parse Evaluator JSON Safely\r",
+							"    // ===============================\r",
+							"    let judgeJson;\r",
+							"    try {\r",
+							"        judgeJson = res.json();\r",
+							"    } catch (e) {\r",
+							"        judgeJson = {};\r",
+							"    }\r",
+							"\r",
+							"    let evaluation = \"WRONG\";\r",
+							"\r",
+							"    if (judgeJson.choices && judgeJson.choices[0] && judgeJson.choices[0].message) {\r",
+							"        evaluation = judgeJson.choices[0].message.content.trim();\r",
+							"    }\r",
+							"\r",
+							"    // ===============================\r",
+							"    // 4) Basic Test (PASS / FAIL)\r",
+							"    // ===============================\r",
+							"    pm.test(\"Evaluation Result\", function () {\r",
+							"        pm.expect(evaluation).to.be.oneOf([\"CORRECT\", \"WRONG\"]);\r",
+							"    });\r",
+							"\r",
+							"    // ===============================\r",
+							"    // 5) LLM Report (Appears in Runner)\r",
+							"    // ===============================\r",
+							"    pm.test(`Prompt: ${promptText}`, () => pm.expect(true).to.be.true);\r",
+							"    pm.test(`Answer: ${answer}`, () => pm.expect(true).to.be.true);\r",
+							"    pm.test(`Evaluation: ${evaluation}`, () => pm.expect(true).to.be.true);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"model\": \"llama-3.3-70b-versatile\",\r\n  \"messages\": [\r\n    {\r\n      \"role\": \"user\",\r\n      \"content\": \"What gas do plants release during photosynthesis?\"\r\n    }\r\n  ]\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.groq.com/openai/v1/chat/completions",
+					"protocol": "https",
+					"host": [
+						"api",
+						"groq",
+						"com"
+					],
+					"path": [
+						"openai",
+						"v1",
+						"chat",
+						"completions"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "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",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
