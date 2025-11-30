@@ -17,12 +17,15 @@ The project includes:
 
 ## Project Structure
 
+```
 postman-LLM-evaluation/
 │
-├── LLM_Eval_Environment.json       # Environment variables (API keys, evaluation)
+├── LLM_Eval_Environment.json       # Environment variables (API keys, base URLs, etc.)
 ├── LLM_Evaluation_Collection.json  # Full collection with requests + scripts
 │
 └── demo.mp4                        # Demo video showing the evaluation running in Postman
+```
+                    # Demo video showing the evaluation running in Postman
 
 ---
 
