@@ -477,7 +477,7 @@
 		"bearer": [
 			{
 				"key": "token",
-				"value": "{{API_KEY}}",
+				"value": "{{GROQ_API_KEY}}",
 				"type": "string"
 			}
 		]
